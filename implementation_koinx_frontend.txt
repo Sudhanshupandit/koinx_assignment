@@ -1,0 +1,225 @@
+1. Dynamic Routing
+The application uses dynamic routing to display data for different coins like Bitcoin, Ethereum, etc. The coinId is retrieved dynamically from the URL using next/router.
+
+
+import { useRouter } from "next/router";
+
+const router = useRouter();
+const { coinId } = router.query;
+
+Explanation:
+router.query gives access to the dynamic part of the URL (e.g., /bitcoin will make coinId = 'bitcoin').
+This makes the application dynamic so that different coins can be fetched and displayed using the same page component.
+
+
+2. Fetching Coin Data
+Coin data is fetched using the CoinGecko API. The API returns the price in USD and INR, along with the 24-hour percentage change.
+
+const fetchCoinData = async (id) => {
+  try {
+    const response = await axios.get(
+      `https://api.coingecko.com/api/v3/simple/price?ids=${id}&vs_currencies=usd,inr&include_24hr_change=true`
+    );
+    setCoinData(response.data);
+  } catch (error) {
+    console.error("Error fetching coin data:", error);
+  }
+};
+
+
+How it works:
+Replace id with the coinId from the URL (e.g., bitcoin, ethereum).
+The API provides real-time price and 24-hour change for the requested coin.
+
+
+{
+  "bitcoin": {
+    "usd": 46253,
+    "inr": 3810000,
+    "usd_24h_change": 2.5
+  }
+}
+
+
+3. Embedding the TradingView Chart
+A TradingView widget is embedded in an iframe to display a price chart for the selected coin.
+
+
+<iframe
+  src={`https://www.tradingview.com/widgetembed/?symbol=${coinId.toUpperCase()}USD&interval=D`}
+  width="100%"
+  height="500"
+  frameBorder="0"
+></iframe>
+
+
+4. Displaying Trending Coins
+The CoinGecko /search/trending API is used to fetch the top trending coins.
+
+const fetchTrendingCoins = async () => {
+  try {
+    const response = await axios.get(
+      "https://api.coingecko.com/api/v3/search/trending"
+    );
+    setTrendingCoins(response.data.coins);
+  } catch (error) {
+    console.error("Error fetching trending coins:", error);
+  }
+};
+
+
+5. React Component Lifecycle
+The useEffect hooks are used to handle the API calls:
+
+Fetch coin data when coinId changes.
+Fetch trending coins when the component loads.
+
+useEffect(() => {
+  if (coinId) {
+    fetchCoinData(coinId);
+  }
+}, [coinId]);
+
+useEffect(() => {
+  fetchTrendingCoins();
+}, []);
+
+
+
+Sure, let me break down the code and functionality step by step to help you understand it clearly. Here's a detailed explanation of each stage.
+
+1. Dynamic Routing
+The application uses dynamic routing to display data for different coins like Bitcoin, Ethereum, etc. The coinId is retrieved dynamically from the URL using next/router.
+
+javascript
+Copy code
+import { useRouter } from "next/router";
+
+const router = useRouter();
+const { coinId } = router.query;
+Explanation:
+router.query gives access to the dynamic part of the URL (e.g., /bitcoin will make coinId = 'bitcoin').
+This makes the application dynamic so that different coins can be fetched and displayed using the same page component.
+2. Fetching Coin Data
+Coin data is fetched using the CoinGecko API. The API returns the price in USD and INR, along with the 24-hour percentage change.
+
+javascript
+Copy code
+const fetchCoinData = async (id) => {
+  try {
+    const response = await axios.get(
+      `https://api.coingecko.com/api/v3/simple/price?ids=${id}&vs_currencies=usd,inr&include_24hr_change=true`
+    );
+    setCoinData(response.data);
+  } catch (error) {
+    console.error("Error fetching coin data:", error);
+  }
+};
+How it works:
+Replace id with the coinId from the URL (e.g., bitcoin, ethereum).
+The API provides real-time price and 24-hour change for the requested coin.
+Example Response:
+json
+Copy code
+{
+  "bitcoin": {
+    "usd": 46253,
+    "inr": 3810000,
+    "usd_24h_change": 2.5
+  }
+}
+3. Embedding the TradingView Chart
+A TradingView widget is embedded in an iframe to display a price chart for the selected coin.
+
+javascript
+Copy code
+<iframe
+  src={`https://www.tradingview.com/widgetembed/?symbol=${coinId.toUpperCase()}USD&interval=D`}
+  width="100%"
+  height="500"
+  frameBorder="0"
+></iframe>
+How it works:
+coinId.toUpperCase() converts the coin name to uppercase (e.g., bitcoin → BTC).
+The TradingView widget URL automatically renders the chart for the specified coin.
+4. Displaying Trending Coins
+The CoinGecko /search/trending API is used to fetch the top trending coins.
+
+javascript
+Copy code
+const fetchTrendingCoins = async () => {
+  try {
+    const response = await axios.get(
+      "https://api.coingecko.com/api/v3/search/trending"
+    );
+    setTrendingCoins(response.data.coins);
+  } catch (error) {
+    console.error("Error fetching trending coins:", error);
+  }
+};
+How it works:
+This API fetches the top 7 trending coins based on market activity.
+Example Response:
+json
+Copy code
+{
+  "coins": [
+    { "item": { "id": "bitcoin", "name": "Bitcoin", "symbol": "BTC" } },
+    { "item": { "id": "ethereum", "name": "Ethereum", "symbol": "ETH" } }
+  ]
+}
+The trending coins are displayed in a horizontally scrollable section:
+
+javascript
+Copy code
+<div style={{ display: "flex", overflowX: "scroll" }}>
+  {trendingCoins.map((coin) => (
+    <div
+      key={coin.item.id}
+      style={{
+        border: "1px solid #ccc",
+        borderRadius: "8px",
+        padding: "16px",
+        margin: "8px",
+      }}
+    >
+      <p>{coin.item.name}</p>
+      <p>Symbol: {coin.item.symbol}</p>
+      <p>Rank: {coin.item.market_cap_rank}</p>
+    </div>
+  ))}
+</div>
+5. React Component Lifecycle
+The useEffect hooks are used to handle the API calls:
+
+Fetch coin data when coinId changes.
+Fetch trending coins when the component loads.
+javascript
+Copy code
+useEffect(() => {
+  if (coinId) {
+    fetchCoinData(coinId);
+  }
+}, [coinId]);
+
+useEffect(() => {
+  fetchTrendingCoins();
+}, []);
+6. Responsive Design
+The layout is kept minimal for clarity. You can use CSS or a library like TailwindCSS or Material-UI to style the application based on the Figma design.
+
+7. Hosting and Deployment
+GitHub: Push your code to a repository.
+Netlify/Vercel: Deploy the app by linking it to your GitHub repository.
+
+
+Final Code Structure:
+📂 project-directory
+├── 📂 pages
+│   └── 📂 [coinId] (Dynamic route)
+│       └── index.js
+├── 📂 components
+│   └── TrendingCoins.js (Optional: Separate trending coins logic here)
+├── 📄 package.json
+├── 📄 README.md
+└── 📂 styles

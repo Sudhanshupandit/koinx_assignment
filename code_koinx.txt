@@ -1,0 +1,93 @@
+import React, { useEffect, useState } from "react";
+import axios from "axios";
+import { useRouter } from "next/router";
+
+const CoinPage = () => {
+  const router = useRouter();
+  const { coinId } = router.query;
+
+  const [coinData, setCoinData] = useState(null);
+  const [trendingCoins, setTrendingCoins] = useState([]);
+
+  useEffect(() => {
+    if (coinId) {
+      fetchCoinData(coinId);
+    }
+  }, [coinId]);
+
+  useEffect(() => {
+    fetchTrendingCoins();
+  }, []);
+
+  const fetchCoinData = async (id) => {
+    try {
+      const response = await axios.get(
+        `https://api.coingecko.com/api/v3/simple/price?ids=${id}&vs_currencies=usd,inr&include_24hr_change=true`
+      );
+      setCoinData(response.data);
+    } catch (error) {
+      console.error("Error fetching coin data:", error);
+    }
+  };
+
+  const fetchTrendingCoins = async () => {
+    try {
+      const response = await axios.get(
+        "https://api.coingecko.com/api/v3/search/trending"
+      );
+      setTrendingCoins(response.data.coins);
+    } catch (error) {
+      console.error("Error fetching trending coins:", error);
+    }
+  };
+
+  return (
+    <div>
+      <header>
+        <h1>{coinId ? coinId.toUpperCase() : "Loading..."}</h1>
+      </header>
+      <main>
+        {coinData ? (
+          <div>
+            <h2>Price in USD: ${coinData[coinId]?.usd}</h2>
+            <h2>Price in INR: ₹{coinData[coinId]?.inr}</h2>
+            <h3>
+              24h Change: {coinData[coinId]?.usd_24h_change.toFixed(2)}%
+            </h3>
+            <iframe
+              src={`https://www.tradingview.com/widgetembed/?symbol=${coinId.toUpperCase()}USD&interval=D`}
+              width="100%"
+              height="500"
+              frameBorder="0"
+            ></iframe>
+          </div>
+        ) : (
+          <p>Loading coin data...</p>
+        )}
+
+        <section>
+          <h2>Trending Coins (24h)</h2>
+          <div style={{ display: "flex", overflowX: "scroll" }}>
+            {trendingCoins.map((coin) => (
+              <div
+                key={coin.item.id}
+                style={{
+                  border: "1px solid #ccc",
+                  borderRadius: "8px",
+                  padding: "16px",
+                  margin: "8px",
+                }}
+              >
+                <p>{coin.item.name}</p>
+                <p>Symbol: {coin.item.symbol}</p>
+                <p>Rank: {coin.item.market_cap_rank}</p>
+              </div>
+            ))}
+          </div>
+        </section>
+      </main>
+    </div>
+  );
+};
+
+export default CoinPage;
